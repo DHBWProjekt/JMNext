@@ -44,7 +44,7 @@ public abstract class Info {
 		} else {
 			percent = 1000;
 		}
-		System.out.println(percent);
+		// System.out.println(percent);
 		return percent;
 	}
 
@@ -62,5 +62,10 @@ public abstract class Info {
 					.concat(String.valueOf(sekunden));
 		}
 		return gesamtZeit;
+	}
+
+	public static double getRestzeitSekunde(MediaPlayer player) {
+		return player.getTotalDuration().subtract(player.getCurrentTime())
+				.toSeconds();
 	}
 }

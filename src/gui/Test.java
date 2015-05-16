@@ -2,17 +2,20 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 public class Test extends JFrame {
-	private ListenerMouseKlick lmk = new ListenerMouseKlick();
 	private SoundButton[][] sbArray = new SoundButton[10][8];
+	private KeyboardListener kbl = new KeyboardListener();
+	private SoundBoard sb;
 	private String name = "";
+	private FensterListener fl = new FensterListener();
 
 	private GridLayout gl = new GridLayout(10, 8);
 
@@ -20,6 +23,8 @@ public class Test extends JFrame {
 	// private GridBagConstraints c = new GridBagConstraints();
 
 	public Test() {
+		addKeyListener(kbl);
+		addWindowListener(fl);
 		setLayout(new BorderLayout());
 		try {
 			UIManager.setLookAndFeel(UIManager
@@ -27,33 +32,8 @@ public class Test extends JFrame {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		// TODO Auto-generated method stub
-		// setLayout(new GridLayout(10, 8));
 
-		// for (int i = 0; i < 25; i++) {
-		// name = "Button ".concat(String.valueOf(i + 1));
-		// sbArray[i] = new SoundButton(name);
-		// sbArray[i].addMouseListener(lmk);
-		// add(sbArray[i]);
-		// }
-
-		// getContentPane().setLayout(new GridBagLayout());
-		// c.fill = GridBagConstraints.BOTH;
-		// c.weightx = 0.1;
-		// c.weighty = 0.1;
-
-		// for (int z = 0; z < sbArray.length; z++) {
-		// for (int sp = 0; sp < sbArray[z].length; sp++) {
-		// // c.gridx = sp;
-		// // c.gridy = z;
-		// sbArray[z][sp] = new SoundButton(
-		// String.valueOf(sbArray[z].length * z + sp));
-		// sbArray[z][sp].addMouseListener(lmk);
-		// add(sbArray[z][sp]);
-		//
-		// }
-		// }
-		SoundBoard sb = new SoundBoard(8, 6);
+		sb = new SoundBoard(8, 6);
 		add(sb, BorderLayout.CENTER);
 		setSize(1000, 500);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -64,58 +44,74 @@ public class Test extends JFrame {
 		Test myTest = new Test();
 	}
 
-	private class ListenerMouseKlick implements MouseListener {
+	private class FensterListener implements WindowListener {
 
 		@Override
-		public void mouseClicked(MouseEvent e) {
-			if (SwingUtilities.isRightMouseButton(e)) {
-				System.out.println("Rechtsklick: " + e.getSource());
-				for (int sp = 0; sp < sbArray.length; sp++) {
-					for (int z = 0; z < sbArray[sp].length; z++) {
-						if (e.getSource() == sbArray[sp][z]) {
-							sbArray[sp][z].setShuffle();
-						}
-					}
-				}
+		public void windowOpened(WindowEvent e) {
+			// TODO Auto-generated method stub
 
-			} else if (SwingUtilities.isLeftMouseButton(e)) {
-				System.out.println("Linksklick: " + e.getSource());
-				for (int sp = 0; sp < sbArray.length; sp++) {
-					for (int z = 0; z < sbArray[sp].length; z++) {
-						if (e.getSource() == sbArray[sp][z]) {
-							sbArray[sp][z].setOneSong();
-							// System.out.println(sbArray[sp][z].getLocation());
-							// remove(sbArray[sp][z]);
-							// validate();
-							// repaint();
+		}
 
-						}
-					}
-				}
+		@Override
+		public void windowClosing(WindowEvent e) {
+			System.out.println("closing");
+			sb.saveSoundboard();
+
+		}
+
+		@Override
+		public void windowClosed(WindowEvent e) {
+			System.out.println("closed");
+
+		}
+
+		@Override
+		public void windowIconified(WindowEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void windowDeiconified(WindowEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void windowActivated(WindowEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void windowDeactivated(WindowEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+	}
+
+	private class KeyboardListener implements KeyListener {
+
+		@Override
+		public void keyTyped(KeyEvent e) {
+			System.out.println("Keyevent");
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			System.out.println(e.getKeyCode());
+			if (e.getKeyCode() == 90) {
+				sb.undoChange();
 			}
-
-		}
-
-		@Override
-		public void mousePressed(MouseEvent e) {
 			// TODO Auto-generated method stub
 
 		}
 
 		@Override
-		public void mouseReleased(MouseEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void mouseEntered(MouseEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void mouseExited(MouseEvent e) {
+		public void keyReleased(KeyEvent e) {
 			// TODO Auto-generated method stub
 
 		}

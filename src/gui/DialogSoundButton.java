@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -40,6 +41,9 @@ public class DialogSoundButton extends JDialog {
 	private File musicPath;
 	private File[] musicFileArray;
 	private JSlider volumeRegler;
+	private JCheckBox cbLoop;
+	private JCheckBox cbRepeat;
+	private JCheckBox dedicatePlayer;
 
 	public DialogSoundButton(SoundButton sb) {
 		this.soundButton = sb;
@@ -223,27 +227,25 @@ public class DialogSoundButton extends JDialog {
 	}
 
 	private void dialogAnwenden() {
-		soundButton.setName(tfName.getText());
-		soundButton.setBackground(btnButtonFarbe.getBackground());
-		soundButton.setBackgroundColorStandard(btnButtonFarbe.getBackground());
-		soundButton.setLabelsTextColor(btnButtonFarbe.getForeground());
-		soundButton.setForegroundColorStandard(btnButtonFarbe.getForeground());
-		soundButton.setVolume(volumeRegler.getValue());
-		soundButton.setTotalDuration("0:00");
-		if (musicPath.listFiles() == null) {
-			System.out.println("Button OneSong");
-			soundButton.setOneSong();
-			soundButton.setMusicPath(musicPath);
-			soundButton.setCounterCicle(0);
-		} else if (musicPath.listFiles() != null) {
-			soundButton.setMusicPath(musicPath);
-			soundButton.setShuffle();
-			soundButton.setMusicFileArray(Browse.getMusicFileArray(musicPath));
-			soundButton.setLblDuration(String.valueOf(Browse
-					.getMusicFileArray(musicPath).length));
-			soundButton.setCounterCicle(0);
+		if (musicPath != null) {
+			if (musicPath.listFiles() == null) {
+				soundButton.setProperties(0, tfName.getText(), musicPath,
+						volumeRegler.getValue(), "0:00",
+						btnButtonFarbe.getForeground(),
+						btnButtonFarbe.getBackground());
+			} else if (musicPath.listFiles() != null) {
+				soundButton.setProperties(1, tfName.getText(), musicPath,
+						volumeRegler.getValue(), String.valueOf(Browse
+								.getMusicFileArray(musicPath).length),
+						btnButtonFarbe.getForeground(), btnButtonFarbe
+								.getBackground());
+			}
+		} else {
+			soundButton.setProperties(0, tfName.getText(), null,
+					volumeRegler.getValue(), "0:00",
+					btnButtonFarbe.getForeground(),
+					btnButtonFarbe.getBackground());
 		}
 		dispose();
-
 	}
 }
