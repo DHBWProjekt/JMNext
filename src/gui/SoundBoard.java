@@ -38,9 +38,7 @@ public class SoundBoard extends JPanel {
 	private Cursor cursorHand = new Cursor(Cursor.HAND_CURSOR);
 	private Cursor cursorMove = new Cursor(Cursor.MOVE_CURSOR);
 	private Stack<SbpChange> SbpChangeStack = new Stack<SbpChange>();
-	// private File fileAutoSave = new File("src/resources/autosave.ser");
-	private File fileAutoSave = new File(getClass().getClassLoader()
-			.getResource("resources/autosave.ser").toString().split(":")[1]);
+	private File fileAutoSave;
 	private int zeilen;
 	private int spalten;
 
@@ -51,10 +49,16 @@ public class SoundBoard extends JPanel {
 	private MediaPlayer sbPlayer;
 
 	public SoundBoard(int zeilen, int spalten) {
+		if (getClass().getClassLoader().getResource("resources").toString()
+				.split(":")[0].compareTo("file") == 0) {
+			fileAutoSave = new File(
+					getClass().getClassLoader().getResource("resources")
+							.toString().split(":")[1].concat("/autosave.ser"));
+			System.out.println(fileAutoSave.getAbsolutePath());
+		} else {
+			fileAutoSave = new File("autosave.ser");
+		}
 
-		System.out.println(getClass().getClassLoader().getResource("resources")
-				.toString().split(":")[1]
-				+ "/autosave.ser");
 		this.zeilen = zeilen;
 		this.spalten = spalten;
 		setLayout(new GridLayout(zeilen, spalten));
@@ -102,15 +106,21 @@ public class SoundBoard extends JPanel {
 		try {
 			FileInputStream fileStream = new FileInputStream(fileAutoSave);
 			ObjectInputStream os = new ObjectInputStream(fileStream);
-			for (int z = 0; z < zeilen; z++) {
-				for (int sp = 0; sp < spalten; sp++) {
-					sbArray[z][sp].setProperties((SoundButtonProperties) os
-							.readObject());
+			try {
+				for (int z = 0; z < zeilen; z++) {
+					for (int sp = 0; sp < spalten; sp++) {
+						sbArray[z][sp].setProperties((SoundButtonProperties) os
+								.readObject());
+					}
 				}
+			} catch (Exception e) {
+				System.out.println("Fehler beim Laden");
+				System.out.println(e.getMessage());
+			} finally {
+				os.close();
 			}
-			os.close();
 		} catch (Exception ex) {
-			System.out.println("Fehler beim Laden");
+			System.out.println("Fehler beim Öffnen der Datei.");
 			System.out.println(ex.getMessage());
 		}
 	}
@@ -123,6 +133,22 @@ public class SoundBoard extends JPanel {
 			sbpChange.getSbLastUpdate().setProperties(
 					sbpChange.getSbpLastUpdate());
 			System.out.println("Undo changes");
+		}
+	}
+
+	public void pbAusblenden() {
+		for (int z = 0; z < zeilen; z++) {
+			for (int sp = 0; sp < spalten; sp++) {
+				sbArray[z][sp].pbAusblenden();
+			}
+		}
+	}
+
+	public void pbEinblenden() {
+		for (int z = 0; z < zeilen; z++) {
+			for (int sp = 0; sp < spalten; sp++) {
+				sbArray[z][sp].pbEinblenden();
+			}
 		}
 	}
 

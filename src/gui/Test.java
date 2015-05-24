@@ -2,20 +2,28 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.UIManager;
 
 public class Test extends JFrame {
-	private SoundButton[][] sbArray = new SoundButton[10][8];
 	private KeyboardListener kbl = new KeyboardListener();
 	private SoundBoard sb;
 	private String name = "";
 	private FensterListener fl = new FensterListener();
+	private JMenuBar mb = new JMenuBar();
+	private JMenu menuReiter = new JMenu("Einstellungen");
+	private JMenuItem pbAusblenden = new JMenuItem(
+			"Vortschrittsanzeige aller Button ausblenden");
 
 	private GridLayout gl = new GridLayout(10, 8);
 
@@ -23,24 +31,33 @@ public class Test extends JFrame {
 	// private GridBagConstraints c = new GridBagConstraints();
 
 	public Test() {
-		addKeyListener(kbl);
-		addWindowListener(fl);
-		setLayout(new BorderLayout());
+		try {
+			addKeyListener(kbl);
+			addWindowListener(fl);
+			setLayout(new BorderLayout());
+			pbAusblenden.addActionListener(new mbListener());
+			menuReiter.add(pbAusblenden);
+			mb.add(menuReiter);
+			setJMenuBar(mb);
+
+			sb = new SoundBoard(8, 6);
+			add(sb, BorderLayout.CENTER);
+			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			setSize(1000, 500);
+			setVisible(true);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+	}
+
+	public static void main(String[] args) {
 		try {
 			UIManager.setLookAndFeel(UIManager
 					.getCrossPlatformLookAndFeelClassName());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		sb = new SoundBoard(8, 6);
-		add(sb, BorderLayout.CENTER);
-		setSize(1000, 500);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setVisible(true);
-	}
-
-	public static void main(String[] args) {
 		Test myTest = new Test();
 	}
 
@@ -116,5 +133,26 @@ public class Test extends JFrame {
 
 		}
 
+	}
+
+	public class mbListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (e.getSource() == pbAusblenden) {
+				if (pbAusblenden.getLabel().compareTo(
+						"Vortschrittsanzeige aller Button einblenden") != 0) {
+					sb.pbAusblenden();
+					pbAusblenden
+							.setText("Vortschrittsanzeige aller Button einblenden");
+				} else {
+					sb.pbEinblenden();
+					pbAusblenden
+							.setText("Vortschrittsanzeige aller Button ausblenden");
+				}
+
+			}
+
+		}
 	}
 }

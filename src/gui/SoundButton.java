@@ -31,14 +31,11 @@ public class SoundButton extends JPanel {
 
 	private File[] musicFileArray;
 
-	// 0->oneSong, 1->shuffleSong, 2->shuffleSongRepeat 3->loop
-	// private int buttonArt = 0;
-	// private String name;
-	// private File musicPath;
-	// private double volume = 0.5;
-	// private String totalDuration = "0:00";
-	// private Color foreground;
-	// private Color background;
+	public static final int oneSong = 0;
+	public static final int shuffle = 1;
+	public static final int shuffleRepeat = 2;
+	public static final int loop = 3;
+	public static final int oneSongOwnPlayer = 4;
 
 	private SoundButtonProperties properties = new SoundButtonProperties();
 
@@ -61,6 +58,7 @@ public class SoundButton extends JPanel {
 		setBorder(BorderFactory.createLineBorder(Color.darkGray));
 		properties.setButtonArt(99);
 		properties.setForeground(lblName.getForeground());
+		setBackground(Color.WHITE);
 		properties.setBackground(getBackground());
 		properties.setName(name);
 		lblName.setText(name);
@@ -104,6 +102,14 @@ public class SoundButton extends JPanel {
 		setBackground(properties.getBackground());
 	}
 
+	public void pbAusblenden() {
+		pbDuration.setVisible(false);
+	}
+
+	public void pbEinblenden() {
+		pbDuration.setVisible(true);
+	}
+
 	public void setProperties(SoundButtonProperties properties) {
 		this.properties.copyProperties(properties);
 		if (properties.getButtonArt() == 99
@@ -129,19 +135,20 @@ public class SoundButton extends JPanel {
 	}
 
 	public void setIcon() {
-		if (properties.getButtonArt() == 0 || properties.getButtonArt() == 99) {
+		if (properties.getButtonArt() == SoundButton.oneSong
+				|| properties.getButtonArt() == 99) {
 			lblShuffle.setVisible(false);
 			lblLoop.setVisible(false);
 			lblRepeat.setVisible(false);
-		} else if (properties.getButtonArt() == 1) {
+		} else if (properties.getButtonArt() == SoundButton.shuffle) {
 			lblLoop.setVisible(false);
 			lblRepeat.setVisible(false);
 			lblShuffle.setVisible(true);
-		} else if (properties.getButtonArt() == 2) {
+		} else if (properties.getButtonArt() == SoundButton.shuffleRepeat) {
 			lblLoop.setVisible(false);
 			lblRepeat.setVisible(true);
 			lblShuffle.setVisible(true);
-		} else if (properties.getButtonArt() == 3) {
+		} else if (properties.getButtonArt() == SoundButton.loop) {
 			lblShuffle.setVisible(false);
 			lblRepeat.setVisible(false);
 			lblLoop.setVisible(true);
