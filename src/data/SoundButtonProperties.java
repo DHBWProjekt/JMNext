@@ -12,6 +12,7 @@ public class SoundButtonProperties implements Serializable {
 	private int buttonArt = 0;
 	private String name;
 	private File musicPath;
+	// private MusicData[] songListe;
 	private double volume = 0.5;
 	private String totalDuration = "0:00";
 	private Color foreground;

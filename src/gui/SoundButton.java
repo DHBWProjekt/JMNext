@@ -22,11 +22,11 @@ public class SoundButton extends JPanel {
 
 	private GridBagConstraints c = new GridBagConstraints();
 
-	private ImageIcon iconShuffle = new ImageIcon(getClass().getClassLoader()
+	public ImageIcon iconShuffle = new ImageIcon(getClass().getClassLoader()
 			.getResource("resources/shuffle.png"));
-	private ImageIcon iconLoop = new ImageIcon(getClass().getClassLoader()
+	public ImageIcon iconLoop = new ImageIcon(getClass().getClassLoader()
 			.getResource("resources/loop.png"));
-	private ImageIcon iconRepeat = new ImageIcon(getClass().getClassLoader()
+	public ImageIcon iconRepeat = new ImageIcon(getClass().getClassLoader()
 			.getResource("resources/repeat.png"));
 
 	private File[] musicFileArray;
@@ -55,7 +55,7 @@ public class SoundButton extends JPanel {
 			0, 1000);
 
 	public SoundButton(String name) {
-		setBorder(BorderFactory.createLineBorder(Color.darkGray));
+		setBorder(BorderFactory.createLineBorder(Color.GRAY));
 		properties.setButtonArt(99);
 		properties.setForeground(lblName.getForeground());
 		setBackground(Color.WHITE);
