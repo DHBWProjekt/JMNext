@@ -3,8 +3,6 @@ package gui;
 import java.awt.Cursor;
 import java.awt.GridLayout;
 import java.awt.dnd.DragSource;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -15,40 +13,34 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Stack;
 
-import javafx.embed.swing.JFXPanel;
-import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import javax.swing.Timer;
 
-import lib.Info;
 import data.SbpChange;
 import data.SoundButtonProperties;
 
 public class SoundBoard extends JPanel {
-	private SoundButton sbActive;
+	private MainView hf;
 	private SoundButton[][] sbArray;
 	private ListenerMouseKlick lmk = new ListenerMouseKlick();
-	private BlinkListener bl = new BlinkListener();
-	private Timer blinkTimer = new Timer(500, bl);
-	private ProgressbarListener pbl = new ProgressbarListener();
-	private Timer pbUpdateTimer = new Timer(100, pbl);
+
 	private Cursor cursorHand = new Cursor(Cursor.HAND_CURSOR);
 	private Cursor cursorMove = new Cursor(Cursor.MOVE_CURSOR);
+	private boolean wasDragged = false;
+
 	private Stack<SbpChange> SbpChangeStack = new Stack<SbpChange>();
 	private File fileAutoSave;
 	private int zeilen;
 	private int spalten;
 
 	private SoundButtonProperties sbpSource;
-	private boolean wasDragged = false;
 
-	private JFXPanel myJFXPanel = new JFXPanel();
-	private MediaPlayer sbPlayer;
-
-	public SoundBoard(int zeilen, int spalten) {
+	public SoundBoard(MainView parent, int zeilen, int spalten) {
+		this.hf = parent;
+		System.out.println(getClass().getClassLoader().getResource("resources")
+				.toString().split(":")[0]);
 		if (getClass().getClassLoader().getResource("resources").toString()
 				.split(":")[0].compareTo("file") == 0) {
 			fileAutoSave = new File(
@@ -65,14 +57,14 @@ public class SoundBoard extends JPanel {
 		sbArray = new SoundButton[zeilen][spalten];
 		for (int z = 0; z < zeilen; z++) {
 			for (int sp = 0; sp < spalten; sp++) {
-				sbArray[z][sp] = new SoundButton(String.valueOf(spalten * z
-						+ sp));
+				sbArray[z][sp] = new SoundButton(this, String.valueOf(spalten
+						* z + sp));
 				sbArray[z][sp].addMouseListener(lmk);
 				sbArray[z][sp].addMouseMotionListener(lmk);
 				add(sbArray[z][sp]);
 			}
 		}
-		System.out.println(fileAutoSave.getAbsolutePath());
+
 		if (fileAutoSave.exists() == false) {
 			try {
 				fileAutoSave.createNewFile();
@@ -85,28 +77,14 @@ public class SoundBoard extends JPanel {
 		}
 	}
 
-	public void saveSoundboard() {
-		try {
-			FileOutputStream fileStream = new FileOutputStream(fileAutoSave);
-			ObjectOutputStream os = new ObjectOutputStream(fileStream);
-			for (int z = 0; z < zeilen; z++) {
-				for (int sp = 0; sp < spalten; sp++) {
-					os.writeObject(sbArray[z][sp].getProperties());
-				}
-			}
-			os.close();
-		} catch (Exception ex) {
-			System.out
-					.println("Objekte konnten nicht vollständig gespeichert werden");
-			System.out.println(ex.getMessage());
-		}
-	}
-
 	public void loadSoundBoard() {
 		try {
 			FileInputStream fileStream = new FileInputStream(fileAutoSave);
 			ObjectInputStream os = new ObjectInputStream(fileStream);
 			try {
+				System.out.println("Zeilen: " + os.readInt());
+				System.out.println("Spalten: " + os.readInt());
+
 				for (int z = 0; z < zeilen; z++) {
 					for (int sp = 0; sp < spalten; sp++) {
 						sbArray[z][sp].setProperties((SoundButtonProperties) os
@@ -125,6 +103,25 @@ public class SoundBoard extends JPanel {
 		}
 	}
 
+	public void saveSoundboard() {
+		try {
+			FileOutputStream fileStream = new FileOutputStream(fileAutoSave);
+			ObjectOutputStream os = new ObjectOutputStream(fileStream);
+			os.writeInt(zeilen);
+			os.writeInt(spalten);
+			for (int z = 0; z < zeilen; z++) {
+				for (int sp = 0; sp < spalten; sp++) {
+					os.writeObject(sbArray[z][sp].getProperties());
+				}
+			}
+			os.close();
+		} catch (Exception ex) {
+			System.out
+					.println("Objekte konnten nicht vollständig gespeichert werden");
+			System.out.println(ex.getMessage());
+		}
+	}
+
 	public void undoChange() {
 		if (SbpChangeStack.empty() == false) {
 			SbpChange sbpChange = SbpChangeStack.pop();
@@ -136,18 +133,25 @@ public class SoundBoard extends JPanel {
 		}
 	}
 
-	public void pbAusblenden() {
-		for (int z = 0; z < zeilen; z++) {
-			for (int sp = 0; sp < spalten; sp++) {
-				sbArray[z][sp].pbAusblenden();
-			}
-		}
-	}
-
-	public void pbEinblenden() {
-		for (int z = 0; z < zeilen; z++) {
-			for (int sp = 0; sp < spalten; sp++) {
-				sbArray[z][sp].pbEinblenden();
+	public void pausePlayer() {
+		if (hf.getSbActive() != null) {
+			if (hf.getSbActive().istPausiert == true
+					|| hf.getSbActive().istFadeOutTimerAktiv() == true) {
+				if (hf.getSbActive().istFadeOutTimerAktiv() == true) {
+					hf.getSbActive().getFadeOutTimer().stop();
+					hf.getSbActive().istPausiert = false;
+					hf.getSbActive().sbFadeIn();
+				}
+				hf.getSbActive().istPausiert = false;
+				hf.getSbActive().sbFadeIn();
+			} else {
+				if (hf.getSbActive().istFadeInTimerAktiv() == true) {
+					hf.getSbActive().getFadeInTimer().stop();
+					hf.getSbActive().istPausiert = true;
+					hf.getSbActive().sbFadeOut();
+				}
+				hf.getSbActive().istPausiert = true;
+				hf.getSbActive().sbFadeOut();
 			}
 		}
 	}
@@ -158,45 +162,33 @@ public class SoundBoard extends JPanel {
 		@Override
 		public void mouseClicked(MouseEvent e) {
 			if (SwingUtilities.isLeftMouseButton(e)) {
-				if (sbPlayer == null) {
-
-				} else {
-					sbPlayer.stop();
-					sbPlayer.dispose();
-					sbPlayer = null;
-				}
 				for (int z = 0; z < sbArray.length; z++) {
 					for (int sp = 0; sp < sbArray[z].length; sp++) {
 						if (e.getSource() == sbArray[z][sp]) {
-							if (sbArray[z][sp] == sbActive) {
-								blinkTimer.stop();
-								pbUpdateTimer.stop();
-								sbActive.setColorStandard();
-								sbActive.setAnzeigeZuruecksetzen();
-								sbActive = null;
-							} else {
-								blinkTimer.stop();
-								pbUpdateTimer.stop();
-								if (sbActive != null) {
-									sbActive.setColorStandard();
-									sbActive.setAnzeigeZuruecksetzen();
-								}
-								if (sbArray[z][sp].getMusicPath() != null
-										&& sbArray[z][sp].getButtonArt() != 99) {
-									sbPlayer = new MediaPlayer(new Media(
-											sbArray[z][sp].getMusicPathASCII()));
-									sbPlayer.play();
-									sbPlayer.setVolume(sbArray[z][sp]
-											.getVolume());
-									sbArray[z][sp].lblCounterUp();
-									sbArray[z][sp].changeColor();
-									sbActive = sbArray[z][sp];
-									blinkTimer.start();
-									pbUpdateTimer.start();
+							if (hf.getTapeA() != null) {
+								if (hf.getSbActive().istFadeOutTimerAktiv() == true) {
+									hf.getSbActive().sbStop();
+									sbArray[z][sp].sbPlay();
 								} else {
-									sbActive = null;
+									if ((hf.getSbActive() == sbArray[z][sp] && hf
+											.getSbActive().istPausiert != true)
+											|| (sbArray[z][sp].getButtonArt() == 99 && hf
+													.getSbActive().istPausiert != true)) {
+										hf.setSbNext(null);
+										hf.getSbActive().sbFadeOut();
+									} else {
+										if (sbArray[z][sp].getButtonArt() != 99) {
+											hf.setSbNext(sbArray[z][sp]);
+											hf.getSbNext().changeColor();
+											hf.getSbNext().sbStartBlink();
+											hf.getSbActive().sbFadeOut();
+										}
+									}
 								}
-
+							} else {
+								if (sbArray[z][sp].getButtonArt() != 99) {
+									sbArray[z][sp].sbPlay();
+								}
 							}
 						}
 					}
@@ -283,41 +275,55 @@ public class SoundBoard extends JPanel {
 		@Override
 		public void mouseMoved(MouseEvent e) {
 		}
-
 	}
 
-	private class BlinkListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			sbActive.changeColor();
-		}
+	public void setAnzeigePfad(File musicPath) {
+		hf.setAnzeigePfad(musicPath);
 	}
 
-	private class ProgressbarListener implements ActionListener {
-
-		public void actionPerformed(ActionEvent e) {
-			if (sbActive.getTotalDuration().compareTo("0:00") == 0) {
-				sbActive.setTotalDuration(Info.getTotalDuration(sbPlayer));
-			}
-			sbActive.setLblDuration(Info.getRestzeit(sbPlayer));
-			sbActive.setPbDurationValue(Info.getPercent(sbPlayer));
-
-			if (Info.getRestzeitSekunde(sbPlayer) == 0
-					&& sbActive.getButtonArt() == 1) {
-				sbPlayer.stop();
-				sbPlayer.dispose();
-				sbPlayer = null;
-				sbPlayer = new MediaPlayer(new Media(
-						sbActive.getMusicPathASCII()));
-				sbPlayer.play();
-			}
-			if (Info.getRestzeitSekunde(sbPlayer) == 0
-					&& sbActive.getButtonArt() == 0) {
-				blinkTimer.stop();
-				pbUpdateTimer.stop();
-				sbActive.setColorStandard();
-				sbActive.setAnzeigeZuruecksetzen();
-				sbActive = null;
+	public void pbAusblenden() {
+		for (int z = 0; z < zeilen; z++) {
+			for (int sp = 0; sp < spalten; sp++) {
+				sbArray[z][sp].pbAusblenden();
 			}
 		}
 	}
+
+	public void pbEinblenden() {
+		for (int z = 0; z < zeilen; z++) {
+			for (int sp = 0; sp < spalten; sp++) {
+				sbArray[z][sp].pbEinblenden();
+			}
+		}
+	}
+
+	public MediaPlayer getTapeA() {
+		return hf.getTapeA();
+	}
+
+	public void setTapeA(MediaPlayer tapeA) {
+		hf.setTapeA(tapeA);
+	}
+
+	public void setTitelAnzeige(String titel) {
+		hf.setTitelAnzeige(titel);
+	}
+
+	public SoundButton getSbActive() {
+		return hf.getSbActive();
+	}
+
+	public void setSbActive(SoundButton sb) {
+		hf.setSbActive(sb);
+		;
+	}
+
+	public SoundButton getSbNext() {
+		return hf.getSbNext();
+	}
+
+	public void setSbNext(SoundButton sb) {
+		hf.setSbNext(sb);
+	}
+
 }
