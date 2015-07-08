@@ -14,6 +14,8 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
 
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.MediaPlayer;
@@ -28,15 +30,23 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 public class MainView extends JFrame {
-	private KeyboardListener kbl = new KeyboardListener();
+	private ListenerKeyboard lkb = new ListenerKeyboard();
 	private ListenerMouseKlick lmk = new ListenerMouseKlick();
+	private ListenerMenuBar lmb = new ListenerMenuBar();
 	private SoundBoard sb1;
+	private int zeilen = 0;
+	private int spalten = 0;
 
 	private FensterListener fl = new FensterListener();
 	private JMenuBar mb = new JMenuBar();
-	private JMenu menuReiter = new JMenu("Einstellungen");
-	private JMenuItem pbAusblenden = new JMenuItem(
+	private JMenu menuEinstellungen = new JMenu("Einstellungen");
+	private JMenu menuSoundboard = new JMenu("Soundboard");
+	private JMenuItem itemPbAusblenden = new JMenuItem(
 			"Vortschrittsanzeige aller Button ausblenden");
+	private JMenuItem itemAddSpalte = new JMenuItem("Spalte hinzufügen");
+	private JMenuItem itemRemoveSpalte = new JMenuItem("Spalte entfernen");
+	private JMenuItem itemAddZeile = new JMenuItem("Zeile hinzufügen");
+	private JMenuItem itemRemoveZeile = new JMenuItem("Zeile entfernen");
 
 	private FlowLayout fla = new FlowLayout();
 	private JPanel pnlAnzeige = new JPanel(fla);
@@ -58,15 +68,13 @@ public class MainView extends JFrame {
 
 	public MainView() {
 		try {
-			addKeyListener(kbl);
+			openAutoSave();
+			addKeyListener(lkb);
 			addWindowListener(fl);
 			setLayout(new BorderLayout());
-			pbAusblenden.addActionListener(new mbListener());
-			menuReiter.add(pbAusblenden);
-			mb.add(menuReiter);
+			createMenuEinstellung();
+			createMenuSoundboard();
 			setJMenuBar(mb);
-
-			sb1 = new SoundBoard(this, 8, 6);
 
 			add(sb1, BorderLayout.CENTER);
 
@@ -92,6 +100,70 @@ public class MainView extends JFrame {
 			e.printStackTrace();
 		}
 		MainView hf = new MainView();
+	}
+
+	private void createMenuEinstellung() {
+		itemPbAusblenden.addActionListener(lmb);
+		menuEinstellungen.add(itemPbAusblenden);
+		mb.add(menuEinstellungen);
+	}
+
+	private void createMenuSoundboard() {
+		itemAddSpalte.addActionListener(lmb);
+		itemRemoveSpalte.addActionListener(lmb);
+		itemAddZeile.addActionListener(lmb);
+		itemRemoveZeile.addActionListener(lmb);
+		menuSoundboard.add(itemAddSpalte);
+		menuSoundboard.add(itemRemoveSpalte);
+		menuSoundboard.add(itemAddZeile);
+		menuSoundboard.add(itemRemoveZeile);
+		mb.add(menuSoundboard);
+	}
+
+	private void openAutoSave() {
+		System.out.println(getClass().getClassLoader().getResource("resources")
+				.toString().split(":")[0]);
+		if (getClass().getClassLoader().getResource("resources").toString()
+				.split(":")[0].compareTo("file") == 0) {
+			fileAutoSave = new File(
+					getClass().getClassLoader().getResource("resources")
+							.toString().split(":")[1].concat("/autosave.ser"));
+			System.out.println(fileAutoSave.getAbsolutePath());
+		} else {
+			fileAutoSave = new File("autosave.ser");
+		}
+		if (fileAutoSave.exists() == false) {
+			try {
+				fileAutoSave.createNewFile();
+			} catch (Exception e) {
+				System.out.println("Datei erstellen fehlgeschlagen");
+				System.out.println(e.getMessage());
+			}
+		} else {
+			System.out.println("Daten werden aus AutoSave geladen");
+			loadSoundboardSize();
+			sb1 = new SoundBoard(this, zeilen, spalten);
+			sb1.loadSoundBoard();
+		}
+	}
+
+	public void loadSoundboardSize() {
+		try {
+			FileInputStream fileStream = new FileInputStream(fileAutoSave);
+			ObjectInputStream os = new ObjectInputStream(fileStream);
+			try {
+				zeilen = os.readInt();
+				spalten = os.readInt();
+			} catch (Exception e) {
+				System.out.println("Fehler beim Laden");
+				System.out.println(e.getMessage());
+			} finally {
+				os.close();
+			}
+		} catch (Exception ex) {
+			System.out.println("Fehler beim Öffnen der Datei.");
+			System.out.println(ex.getMessage());
+		}
 	}
 
 	private class FensterListener implements WindowListener {
@@ -141,7 +213,7 @@ public class MainView extends JFrame {
 
 	}
 
-	private class KeyboardListener implements KeyListener {
+	private class ListenerKeyboard implements KeyListener {
 
 		@Override
 		public void keyTyped(KeyEvent e) {
@@ -170,24 +242,34 @@ public class MainView extends JFrame {
 
 	}
 
-	public class mbListener implements ActionListener {
+	public class ListenerMenuBar implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (e.getSource() == pbAusblenden) {
-				if (pbAusblenden.getLabel().compareTo(
+			if (e.getSource() == itemPbAusblenden) {
+				if (itemPbAusblenden.getLabel().compareTo(
 						"Vortschrittsanzeige aller Button einblenden") != 0) {
 					sb1.pbAusblenden();
-					pbAusblenden
+					itemPbAusblenden
 							.setText("Vortschrittsanzeige aller Button einblenden");
 				} else {
 					sb1.pbEinblenden();
-					pbAusblenden
+					itemPbAusblenden
 							.setText("Vortschrittsanzeige aller Button ausblenden");
 				}
-
+			} else if (e.getSource() == itemAddSpalte) {
+				System.out.println("Spalte hinzufügen");
+				sb1.addSpalte();
+			} else if (e.getSource() == itemRemoveSpalte) {
+				System.out.println("Spalte entfernen");
+				sb1.removeSpalte();
+			} else if (e.getSource() == itemAddZeile) {
+				System.out.println("Zeile hinzufügen");
+				sb1.addZeile();
+			} else if (e.getSource() == itemRemoveZeile) {
+				System.out.println("Spalte entfernen");
+				sb1.removeZeile();
 			}
-
 		}
 	}
 

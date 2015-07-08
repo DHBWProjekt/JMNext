@@ -24,6 +24,7 @@ import data.SoundButtonProperties;
 public class SoundBoard extends JPanel {
 	private MainView hf;
 	private SoundButton[][] sbArray;
+	private SoundButton[][] sbArrayChange;
 	private ListenerMouseKlick lmk = new ListenerMouseKlick();
 
 	private Cursor cursorHand = new Cursor(Cursor.HAND_CURSOR);
@@ -31,7 +32,6 @@ public class SoundBoard extends JPanel {
 	private boolean wasDragged = false;
 
 	private Stack<SbpChange> SbpChangeStack = new Stack<SbpChange>();
-	private File fileAutoSave;
 	private int zeilen;
 	private int spalten;
 
@@ -39,18 +39,6 @@ public class SoundBoard extends JPanel {
 
 	public SoundBoard(MainView parent, int zeilen, int spalten) {
 		this.hf = parent;
-		System.out.println(getClass().getClassLoader().getResource("resources")
-				.toString().split(":")[0]);
-		if (getClass().getClassLoader().getResource("resources").toString()
-				.split(":")[0].compareTo("file") == 0) {
-			fileAutoSave = new File(
-					getClass().getClassLoader().getResource("resources")
-							.toString().split(":")[1].concat("/autosave.ser"));
-			System.out.println(fileAutoSave.getAbsolutePath());
-		} else {
-			fileAutoSave = new File("autosave.ser");
-		}
-
 		this.zeilen = zeilen;
 		this.spalten = spalten;
 		setLayout(new GridLayout(zeilen, spalten));
@@ -64,22 +52,12 @@ public class SoundBoard extends JPanel {
 				add(sbArray[z][sp]);
 			}
 		}
-
-		if (fileAutoSave.exists() == false) {
-			try {
-				fileAutoSave.createNewFile();
-			} catch (Exception e) {
-				System.out.println("Datei erstellen fehlgeschlagen");
-				System.out.println(e.getMessage());
-			}
-		} else {
-			loadSoundBoard();
-		}
 	}
 
 	public void loadSoundBoard() {
 		try {
-			FileInputStream fileStream = new FileInputStream(fileAutoSave);
+			FileInputStream fileStream = new FileInputStream(
+					hf.getFileAutoSave());
 			ObjectInputStream os = new ObjectInputStream(fileStream);
 			try {
 				System.out.println("Zeilen: " + os.readInt());
@@ -105,7 +83,8 @@ public class SoundBoard extends JPanel {
 
 	public void saveSoundboard() {
 		try {
-			FileOutputStream fileStream = new FileOutputStream(fileAutoSave);
+			FileOutputStream fileStream = new FileOutputStream(
+					hf.getFileAutoSave());
 			ObjectOutputStream os = new ObjectOutputStream(fileStream);
 			os.writeInt(zeilen);
 			os.writeInt(spalten);
@@ -120,6 +99,96 @@ public class SoundBoard extends JPanel {
 					.println("Objekte konnten nicht vollständig gespeichert werden");
 			System.out.println(ex.getMessage());
 		}
+	}
+
+	public void addSpalte() {
+		int counter = zeilen * spalten;
+		spalten++;
+		removeAll();
+		setLayout(new GridLayout(zeilen, spalten));
+		sbArrayChange = new SoundButton[zeilen][spalten];
+		for (int z = 0; z < zeilen; z++) {
+			for (int sp = 0; sp < spalten; sp++) {
+				if (sp + 1 != spalten) {
+					sbArrayChange[z][sp] = sbArray[z][sp];
+				} else {
+					sbArrayChange[z][sp] = new SoundButton(this,
+							String.valueOf(counter));
+					sbArrayChange[z][sp].addMouseListener(lmk);
+					sbArrayChange[z][sp].addMouseMotionListener(lmk);
+					counter++;
+				}
+				add(sbArrayChange[z][sp]);
+			}
+		}
+		sbArray = null;
+		sbArray = sbArrayChange;
+		sbArrayChange = null;
+		validate();
+		repaint();
+	}
+
+	public void removeSpalte() {
+		spalten--;
+		removeAll();
+		setLayout(new GridLayout(zeilen, spalten));
+		sbArrayChange = new SoundButton[zeilen][spalten];
+		for (int z = 0; z < zeilen; z++) {
+			for (int sp = 0; sp < spalten; sp++) {
+				sbArrayChange[z][sp] = sbArray[z][sp];
+				add(sbArrayChange[z][sp]);
+			}
+		}
+		sbArray = null;
+		sbArray = sbArrayChange;
+		sbArrayChange = null;
+		validate();
+		repaint();
+	}
+
+	public void addZeile() {
+		int counter = zeilen * spalten;
+		zeilen++;
+		removeAll();
+		setLayout(new GridLayout(zeilen, spalten));
+		sbArrayChange = new SoundButton[zeilen][spalten];
+		for (int z = 0; z < zeilen; z++) {
+			for (int sp = 0; sp < spalten; sp++) {
+				if (z + 1 != zeilen) {
+					sbArrayChange[z][sp] = sbArray[z][sp];
+				} else {
+					sbArrayChange[z][sp] = new SoundButton(this,
+							String.valueOf(counter));
+					sbArrayChange[z][sp].addMouseListener(lmk);
+					sbArrayChange[z][sp].addMouseMotionListener(lmk);
+					counter++;
+				}
+				add(sbArrayChange[z][sp]);
+			}
+		}
+		sbArray = null;
+		sbArray = sbArrayChange;
+		sbArrayChange = null;
+		validate();
+		repaint();
+	}
+
+	public void removeZeile() {
+		zeilen--;
+		removeAll();
+		setLayout(new GridLayout(zeilen, spalten));
+		sbArrayChange = new SoundButton[zeilen][spalten];
+		for (int z = 0; z < zeilen; z++) {
+			for (int sp = 0; sp < spalten; sp++) {
+				sbArrayChange[z][sp] = sbArray[z][sp];
+				add(sbArrayChange[z][sp]);
+			}
+		}
+		sbArray = null;
+		sbArray = sbArrayChange;
+		sbArrayChange = null;
+		validate();
+		repaint();
 	}
 
 	public void undoChange() {
